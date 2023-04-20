@@ -5,25 +5,114 @@ import rospy
 from stretch_moveit_shim.srv import SetJoints, SetJointsRequest, SetBodyResponse
 from stretch_moveit_shim.msg import Joint
 
+# Added
+from geometry_msgs import PoseStamped
+from std_srvs.srv import Trigger
+
+# TODO: It would be nice to disable input once a part starts and to re-enable input once the part finish.
+
 rospy.wait_for_service('/stretch_interface/set_joints')
 
+class Task_Demo_Class:
+    def __init__(self):
+        # Setup publishers
+        # TODO: Finish writing "2d_nav_estimate" publisher
+        self.publisher_2d_nav_estimate = rospy.Publisher("/", PoseStamped, queue_size = 10)
+        self.publisher_2d_nav_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size = 10)
+
+        # Setup "start_pose_estimate" message
+        self.start_pose_estimate = PoseStamped()
+        self.start_pose_estimate.Header.Seq  = 0
+        self.start_pose_estimate.Header.Stamp  = "now"
+        self.start_pose_estimate.Header.Frame_id  = "map"
+        self.start_pose_estimate.Pose.Position.x  = 0
+        self.start_pose_estimate.Pose.Position.y  = 0
+        self.start_pose_estimate.Pose.Position.z  = 0
+        self.start_pose_estimate.Pose.Orientation.x  = 0
+        self.start_pose_estimate.Pose.Orientation.y  = 0
+        self.start_pose_estimate.Pose.Orientation.z  = 0
+        self.start_pose_estimate.Pose.Orientation.w  = 0
+
+        # Setup "pick_up_pose" message
+        self.pick_up_pose = PoseStamped()
+        self.pick_up_pose.Header.Seq  = 0
+        self.pick_up_pose.Header.Stamp  = "now"
+        self.pick_up_pose.Header.Frame_id  = "map"
+        self.pick_up_pose.Pose.Position.x  = 0
+        self.pick_up_pose.Pose.Position.y  = 0
+        self.pick_up_pose.Pose.Position.z  = 0
+        self.pick_up_pose.Pose.Orientation.x  = 0
+        self.pick_up_pose.Pose.Orientation.y  = 0
+        self.pick_up_pose.Pose.Orientation.z  = 0
+        self.pick_up_pose.Pose.Orientation.w  = 0
+
+        # Setup "drop_off_pose" message
+        self.drop_off_pose = PoseStamped()
+        self.drop_off_pose.Header.Seq  = 0
+        self.drop_off_pose.Header.Stamp  = "now"
+        self.drop_off_pose.Header.Frame_id  = "map"
+        self.drop_off_pose.Pose.Position.x  = 0
+        self.drop_off_pose.Pose.Position.y  = 0
+        self.drop_off_pose.Pose.Position.z  = 0
+        self.drop_off_pose.Pose.Orientation.x  = 0
+        self.drop_off_pose.Pose.Orientation.y  = 0
+        self.drop_off_pose.Pose.Orientation.z  = 0
+        self.drop_off_pose.Pose.Orientation.w  = 0
+
+        self.publisher_2d_nav_goal.publish(start_pose_estimate)
+        self.publisher_2d_nav_goal.publish(pick_up_pose)
+        self.publisher_2d_nav_goal.publish(drop_off_pose)
+
 while(True):
+    # Run initialization code
+    print("\n")
+    print("Part 0: Initialization")
+    print("Part 0 Completed.")
+
+
+    # Go to Pick Up Location
+    print("\n")
+    print("Part 1: Drive to Pick Up Position")
     print("Press Enter:")
     text = input()
     if len(text) == 0:
-        try:
-            service = rospy.ServiceProxy('/stretch_interface/set_joints', SetJoints)
-            msg = Joint(joint_name='joint_lift', val = 0.8)
-            service([msg])
-        except rospy.ServiceException as e:
-            print("Service call failed: %s"%e)
+        # Check if in navigation mode. If switch to navigation mode
+        navigation = rospy.ServiceProxy("/switch_to_navigation_mode", Trigger)
+        navigation()
 
-    print("\nPress Enter:")
+        # TODO: Publish 2D Nav Goal for Pick Up Position
+        # TODO: Check if 2D Nav Goal was reached
+            # There should be something like a topic that can be subscribed to that announces when a 2D Nav Goal was reached
+            # There should be something like a topic that can be subscribed to that announces the current distance from the 2D Nav Goal.
+                # Once the error is small enough a cancel message could be sent.
+            # After a decided amount of time has passed a cancel message could be sent if the 2D Nav Goal is not reached.
+        print("Part 1 Completed.")
+
+    # Pick up plate
+    print("\n")
+    print("Part 2: Pick Up Plate")
+    print("Press Enter:")
     text = input()
     if len(text) == 0:
-        try:
-            service = rospy.ServiceProxy('/stretch_interface/set_joints', SetJoints)
-            msg = Joint(joint_name='joint_lift', val = 0.4)
-            service([msg])
-        except rospy.ServiceException as e:
-            print("Service call failed: %s"%e)
+        print("Part 2 Completed.")
+    
+    # Drive to place position
+    print("\n")
+    print("Part 3: Drive to Place Position")
+    print("Press Enter:")
+    text = input()
+    if len(text) == 0:
+        print("Part 3 Completed.")
+
+    # Place Plate
+    print("\n")
+    print("Part 4: Place Plate")
+    print("Press Enter:")
+    text = input()
+    if len(text) == 0:
+        print("Part 4 Completed.")
+    
+if __name__ == '__main__':
+    rospy.init_node('task_demo')
+    Task_Demo_Class()
+    rospy.spin()
