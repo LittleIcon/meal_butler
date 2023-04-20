@@ -6,7 +6,8 @@ from stretch_moveit_shim.srv import SetJoints, SetJointsRequest, SetBodyResponse
 from stretch_moveit_shim.msg import Joint
 
 # Added
-from geometry_msgs import PoseStamped
+from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_srvs.srv import Trigger
 
 # TODO: It would be nice to disable input once a part starts and to re-enable input once the part finish.
@@ -24,47 +25,47 @@ class Task_Demo_Class:
     def __init__(self):
         # Setup publishers
         # TODO: Finish writing "2d_nav_estimate" publisher
-        self.pub_2d_nav_estimate = rospy.Publisher("/", PoseStamped, queue_size = 10)
+        self.pub_2d_nav_estimate = rospy.Publisher("/initialpose", PoseWithCovarianceStamped, queue_size = 10)
         self.pub_2d_nav_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size = 10)
 
         # Setup "start_pose_estimate" message
-        self.msg_start_pose_estimate = PoseStamped()
-        self.msg_start_pose_estimate.Header.Seq  = 0
-        self.msg_start_pose_estimate.Header.Stamp  = "now"
-        self.msg_start_pose_estimate.Header.Frame_id  = "map"
-        self.msg_start_pose_estimate.Pose.Position.x  = 0
-        self.msg_start_pose_estimate.Pose.Position.y  = 0
-        self.msg_start_pose_estimate.Pose.Position.z  = 0
-        self.msg_start_pose_estimate.Pose.Orientation.x  = 0
-        self.msg_start_pose_estimate.Pose.Orientation.y  = 0
-        self.msg_start_pose_estimate.Pose.Orientation.z  = 0
-        self.msg_start_pose_estimate.Pose.Orientation.w  = 0
+        self.msg_start_pose_estimate = PoseWithCovarianceStamped()
+        self.msg_start_pose_estimate.header.seq  = 0
+        self.msg_start_pose_estimate.header.stamp  = "now"
+        self.msg_start_pose_estimate.header.frame_id  = "map"
+        self.msg_start_pose_estimate.pose.pose.position.x  = 0
+        self.msg_start_pose_estimate.pose.pose.position.y  = 0
+        self.msg_start_pose_estimate.pose.pose.position.z  = 0
+        self.msg_start_pose_estimate.pose.pose.orientation.x  = 0
+        self.msg_start_pose_estimate.pose.pose.orientation.y  = 0
+        self.msg_start_pose_estimate.pose.pose.orientation.z  = 0
+        self.msg_start_pose_estimate.pose.pose.orientation.w  = 0
 
         # Setup "pick_up_pose" message
         self.msg_pick_up_pose = PoseStamped()
-        self.msg_pick_up_pose.Header.Seq  = 0
-        self.msg_pick_up_pose.Header.Stamp  = "now"
-        self.msg_pick_up_pose.Header.Frame_id  = "map"
-        self.msg_pick_up_pose.Pose.Position.x  = 0
-        self.msg_pick_up_pose.Pose.Position.y  = 0
-        self.msg_pick_up_pose.Pose.Position.z  = 0
-        self.msg_pick_up_pose.Pose.Orientation.x  = 0
-        self.msg_pick_up_pose.Pose.Orientation.y  = 0
-        self.msg_pick_up_pose.Pose.Orientation.z  = 0
-        self.msg_pick_up_pose.Pose.Orientation.w  = 0
+        self.msg_pick_up_pose.header.seq  = 0
+        self.msg_pick_up_pose.header.stamp  = "now"
+        self.msg_pick_up_pose.header.frame_id  = "map"
+        self.msg_pick_up_pose.pose.position.x  = 0
+        self.msg_pick_up_pose.pose.position.y  = 0
+        self.msg_pick_up_pose.pose.position.z  = 0
+        self.msg_pick_up_pose.pose.orientation.x  = 0
+        self.msg_pick_up_pose.pose.orientation.y  = 0
+        self.msg_pick_up_pose.pose.orientation.z  = 0
+        self.msg_pick_up_pose.pose.orientation.w  = 0
 
         # Setup "drop_off_pose" message
         self.msg_drop_off_pose = PoseStamped()
-        self.msg_drop_off_pose.Header.Seq  = 0
-        self.msg_drop_off_pose.Header.Stamp  = "now"
-        self.msg_drop_off_pose.Header.Frame_id  = "map"
-        self.msg_drop_off_pose.Pose.Position.x  = 0
-        self.msg_drop_off_pose.Pose.Position.y  = 0
-        self.msg_drop_off_pose.Pose.Position.z  = 0
-        self.msg_drop_off_pose.Pose.Orientation.x  = 0
-        self.msg_drop_off_pose.Pose.Orientation.y  = 0
-        self.msg_drop_off_pose.Pose.Orientation.z  = 0
-        self.msg_drop_off_pose.Pose.Orientation.w  = 0
+        self.msg_drop_off_pose.header.seq  = 0
+        self.msg_drop_off_pose.header.stamp  = "now"
+        self.msg_drop_off_pose.header.frame_id  = "map"
+        self.msg_drop_off_pose.pose.position.x  = 0
+        self.msg_drop_off_pose.pose.position.y  = 0
+        self.msg_drop_off_pose.pose.position.z  = 0
+        self.msg_drop_off_pose.pose.orientation.x  = 0
+        self.msg_drop_off_pose.pose.orientation.y  = 0
+        self.msg_drop_off_pose.pose.orientation.z  = 0
+        self.msg_drop_off_pose.pose.orientation.w  = 0
 
         # Setup Service Triggers (or something like that)
         self.switch_to_navigation_mode = rospy.ServiceProxy("/switch_to_navigation_mode", Trigger)
@@ -75,7 +76,7 @@ class Task_Demo_Class:
             # Run initialization code
             print("\n")
             print("Part 0: Initialization")
-            self.pub_2d_nav_goal.publish(self.msg_start_pose_estimate)
+            self.pub_2d_nav_estimate.publish(self.msg_start_pose_estimate)
             print("Part 0 Completed.")
 
 
@@ -97,11 +98,7 @@ class Task_Demo_Class:
                     # TODO: rostopic pub --once /move_base/cancel actionlib_msgs/GoalID -- {}
                 self.pub_2d_nav_goal.publish(self.msg_pick_up_pose)
 
-                print("Hello Stretch has arrived at Pick-Up Position")
-
-            # Pick up plate
-            print("\n")
-            print("Part 2: Pick Up Plate")
+            print("Part 2: Pick-Up Plate")
             print("Press Enter:")
             text = input()
             if len(text) == 0:
@@ -132,7 +129,7 @@ def main():
     node.main()
 
 if __name__ == '__main__':
-    #rospy.init_node('task_demo')
+    rospy.init_node('task_demo')
     #Task_Demo_Class()
     #rospy.spin()
     main()
