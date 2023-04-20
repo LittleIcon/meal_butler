@@ -11,108 +11,142 @@ from std_srvs.srv import Trigger
 
 # TODO: It would be nice to disable input once a part starts and to re-enable input once the part finish.
 
+# TODO: Do the following:
+    # Obtain the topic used for 2D Nav Estimate
+    # Obtain the topic used for 2D Nav Goal Reached
+    # Obtain the starting position (estimate pose)
+    # Obtain the pick up position (2d nav goal)
+    # Obtain the drop off position (2d nav goal)
+
 rospy.wait_for_service('/stretch_interface/set_joints')
 
 class Task_Demo_Class:
     def __init__(self):
         # Setup publishers
         # TODO: Finish writing "2d_nav_estimate" publisher
-        self.publisher_2d_nav_estimate = rospy.Publisher("/", PoseStamped, queue_size = 10)
-        self.publisher_2d_nav_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size = 10)
+        self.pub_2d_nav_estimate = rospy.Publisher("/", PoseStamped, queue_size = 10)
+        self.pub_2d_nav_goal = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size = 10)
 
         # Setup "start_pose_estimate" message
-        self.start_pose_estimate = PoseStamped()
-        self.start_pose_estimate.Header.Seq  = 0
-        self.start_pose_estimate.Header.Stamp  = "now"
-        self.start_pose_estimate.Header.Frame_id  = "map"
-        self.start_pose_estimate.Pose.Position.x  = 0
-        self.start_pose_estimate.Pose.Position.y  = 0
-        self.start_pose_estimate.Pose.Position.z  = 0
-        self.start_pose_estimate.Pose.Orientation.x  = 0
-        self.start_pose_estimate.Pose.Orientation.y  = 0
-        self.start_pose_estimate.Pose.Orientation.z  = 0
-        self.start_pose_estimate.Pose.Orientation.w  = 0
+        self.msg_start_pose_estimate = PoseStamped()
+        self.msg_start_pose_estimate.Header.Seq  = 0
+        self.msg_start_pose_estimate.Header.Stamp  = "now"
+        self.msg_start_pose_estimate.Header.Frame_id  = "map"
+        self.msg_start_pose_estimate.Pose.Position.x  = 0
+        self.msg_start_pose_estimate.Pose.Position.y  = 0
+        self.msg_start_pose_estimate.Pose.Position.z  = 0
+        self.msg_start_pose_estimate.Pose.Orientation.x  = 0
+        self.msg_start_pose_estimate.Pose.Orientation.y  = 0
+        self.msg_start_pose_estimate.Pose.Orientation.z  = 0
+        self.msg_start_pose_estimate.Pose.Orientation.w  = 0
 
         # Setup "pick_up_pose" message
-        self.pick_up_pose = PoseStamped()
-        self.pick_up_pose.Header.Seq  = 0
-        self.pick_up_pose.Header.Stamp  = "now"
-        self.pick_up_pose.Header.Frame_id  = "map"
-        self.pick_up_pose.Pose.Position.x  = 0
-        self.pick_up_pose.Pose.Position.y  = 0
-        self.pick_up_pose.Pose.Position.z  = 0
-        self.pick_up_pose.Pose.Orientation.x  = 0
-        self.pick_up_pose.Pose.Orientation.y  = 0
-        self.pick_up_pose.Pose.Orientation.z  = 0
-        self.pick_up_pose.Pose.Orientation.w  = 0
+        self.msg_pick_up_pose = PoseStamped()
+        self.msg_pick_up_pose.Header.Seq  = 0
+        self.msg_pick_up_pose.Header.Stamp  = "now"
+        self.msg_pick_up_pose.Header.Frame_id  = "map"
+        self.msg_pick_up_pose.Pose.Position.x  = 0
+        self.msg_pick_up_pose.Pose.Position.y  = 0
+        self.msg_pick_up_pose.Pose.Position.z  = 0
+        self.msg_pick_up_pose.Pose.Orientation.x  = 0
+        self.msg_pick_up_pose.Pose.Orientation.y  = 0
+        self.msg_pick_up_pose.Pose.Orientation.z  = 0
+        self.msg_pick_up_pose.Pose.Orientation.w  = 0
 
         # Setup "drop_off_pose" message
-        self.drop_off_pose = PoseStamped()
-        self.drop_off_pose.Header.Seq  = 0
-        self.drop_off_pose.Header.Stamp  = "now"
-        self.drop_off_pose.Header.Frame_id  = "map"
-        self.drop_off_pose.Pose.Position.x  = 0
-        self.drop_off_pose.Pose.Position.y  = 0
-        self.drop_off_pose.Pose.Position.z  = 0
-        self.drop_off_pose.Pose.Orientation.x  = 0
-        self.drop_off_pose.Pose.Orientation.y  = 0
-        self.drop_off_pose.Pose.Orientation.z  = 0
-        self.drop_off_pose.Pose.Orientation.w  = 0
+        self.msg_drop_off_pose = PoseStamped()
+        self.msg_drop_off_pose.Header.Seq  = 0
+        self.msg_drop_off_pose.Header.Stamp  = "now"
+        self.msg_drop_off_pose.Header.Frame_id  = "map"
+        self.msg_drop_off_pose.Pose.Position.x  = 0
+        self.msg_drop_off_pose.Pose.Position.y  = 0
+        self.msg_drop_off_pose.Pose.Position.z  = 0
+        self.msg_drop_off_pose.Pose.Orientation.x  = 0
+        self.msg_drop_off_pose.Pose.Orientation.y  = 0
+        self.msg_drop_off_pose.Pose.Orientation.z  = 0
+        self.msg_drop_off_pose.Pose.Orientation.w  = 0
 
-        self.publisher_2d_nav_goal.publish(start_pose_estimate)
-        self.publisher_2d_nav_goal.publish(pick_up_pose)
-        self.publisher_2d_nav_goal.publish(drop_off_pose)
+        # Setup Service Triggers (or something like that)
+        self.switch_to_navigation_mode = rospy.ServiceProxy("/switch_to_navigation_mode", Trigger)
+        self.switch_to_position_mode = rospy.ServiceProxy("/switch_to_position_mode", Trigger)
 
-while(True):
-    # Run initialization code
-    print("\n")
-    print("Part 0: Initialization")
-    print("Part 0 Completed.")
+    def main(self):
+        while(True):
+            # Run initialization code
+            print("\n")
+            print("Part 0: Initialization")
+            self.pub_2d_nav_goal.publish(self.msg_start_pose_estimate)
+            print("Part 0 Completed.")
 
 
-    # Go to Pick Up Location
-    print("\n")
-    print("Part 1: Drive to Pick Up Position")
-    print("Press Enter:")
-    text = input()
-    if len(text) == 0:
-        # Check if in navigation mode. If switch to navigation mode
-        navigation = rospy.ServiceProxy("/switch_to_navigation_mode", Trigger)
-        navigation()
+            # Go to Pick Up Location
+            print("\n")
+            print("Part 1: Drive to Pick-Up Position")
+            print("Press Enter:")
+            text = input()
+            if len(text) == 0:
+                # Check if in navigation mode. If switch to navigation mode
+                self.switch_to_navigation_mode()
 
-        # TODO: Publish 2D Nav Goal for Pick Up Position
-        # TODO: Check if 2D Nav Goal was reached
-            # There should be something like a topic that can be subscribed to that announces when a 2D Nav Goal was reached
-            # There should be something like a topic that can be subscribed to that announces the current distance from the 2D Nav Goal.
-                # Once the error is small enough a cancel message could be sent.
-            # After a decided amount of time has passed a cancel message could be sent if the 2D Nav Goal is not reached.
-        print("Part 1 Completed.")
+                # TODO: Publish 2D Nav Goal for Pick Up Position
+                # TODO: Check if 2D Nav Goal was reached
+                    # There should be something like a topic that can be subscribed to that announces when a 2D Nav Goal was reached
+                    # There should be something like a topic that can be subscribed to that announces the current distance from the 2D Nav Goal.
+                        # Once the error is small enough a cancel message could be sent.
+                    # After a decided amount of time has passed a cancel message could be sent if the 2D Nav Goal is not reached.
+                    # TODO: rostopic pub --once /move_base/cancel actionlib_msgs/GoalID -- {}
+                self.pub_2d_nav_goal.publish(self.msg_pick_up_pose)
 
-    # Pick up plate
-    print("\n")
-    print("Part 2: Pick Up Plate")
-    print("Press Enter:")
-    text = input()
-    if len(text) == 0:
-        print("Part 2 Completed.")
-    
-    # Drive to place position
-    print("\n")
-    print("Part 3: Drive to Place Position")
-    print("Press Enter:")
-    text = input()
-    if len(text) == 0:
-        print("Part 3 Completed.")
+                print("Hello Stretch has arrived at Pick-Up Position")
 
-    # Place Plate
-    print("\n")
-    print("Part 4: Place Plate")
-    print("Press Enter:")
-    text = input()
-    if len(text) == 0:
-        print("Part 4 Completed.")
-    
+            # Pick up plate
+            print("\n")
+            print("Part 2: Pick Up Plate")
+            print("Press Enter:")
+            text = input()
+            if len(text) == 0:
+                self.switch_to_position_mode()
+                print("Use the Keyboard Control to control the robot.")
+            
+            # Drive to place position
+            print("\n")
+            print("Part 3: Drive to Place Position")
+            print("Press Enter:")
+            text = input()
+            if len(text) == 0:
+                self.switch_to_navigation_mode()
+                self.pub_2d_nav_goal.publish(self.msg_drop_off_pose)
+                print("Hello Stretch has arrived at Place Position")
+
+            # Place Plate
+            print("\n")
+            print("Part 4: Place Plate")
+            print("Press Enter:")
+            text = input()
+            if len(text) == 0:
+                self.switch_to_position_mode()
+                print("Use the Keyboard Control to control the robot.")
+
+def main():
+    node = Task_Demo_Class()
+    node.main()
+
 if __name__ == '__main__':
-    rospy.init_node('task_demo')
-    Task_Demo_Class()
-    rospy.spin()
+    #rospy.init_node('task_demo')
+    #Task_Demo_Class()
+    #rospy.spin()
+    main()
+
+'''
+# Check if in navigation mode. If it is not switch to navigation mode
+if msg == "position":
+    break
+elif:
+    self.switch_to_navigation_mode()
+
+# Check if in position mode. If it is not switch to position mode
+if msg == "navigation":
+    break
+elif:
+    self.switch_to_position_mode()
+'''
