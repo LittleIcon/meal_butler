@@ -1,0 +1,5 @@
+<launch>
+    <param name="condition" type="string" value="False" />
+    <node pkg="stretch_moveit_shim" name="stretch_interface_real" type="stretch_interface_real.py"/>
+    <node pkg="meal_delivery_demo" name="task_demo" type="task_demo.py"/>
+</launch>

@@ -84,6 +84,8 @@ class Task_Demo_Class:
             print("\n")
             print("Part 1: Drive to Pick-Up Position")
             print("Press Enter:")
+            
+            # TODO: 
             text = input()
             if len(text) == 0:
                 # Check if in navigation mode. If switch to navigation mode
@@ -126,7 +128,14 @@ class Task_Demo_Class:
 
 def main():
     node = Task_Demo_Class()
-    node.main()
+
+    condition_parameter = "condition"
+    value = "True"
+    if rospy.has_param(condition_parameter):
+            value = rospy.get_param(condition_parameter)
+
+    if value == "True":
+        node.main()
 
 if __name__ == '__main__':
     rospy.init_node('task_demo')
