@@ -1,5 +1,10 @@
 <launch>
-    <param name="condition" type="string" value="False" />
-    <node pkg="stretch_moveit_shim" name="stretch_interface_real" type="stretch_interface_real.py"/>
-    <node pkg="meal_delivery_demo" name="task_demo" type="task_demo.py"/>
+    
+    <node pkg="stretch_moveit_shim" name="stretch_interface_real" type="stretch_interface_real" output="screen"/>
+    <node pkg="meal_delivery_demo" name="task_demo" type="task_demo" output="screen"/>
+    <!-- 
+    <param name="condition" type="string" value="False" />>
+    #roslaunch stretch_navigation  map_yaml:=$HOME/mymap.yaml
+    <include file="$(find ground_projection)/launch/navigation_ernie.launch">
+    -->
 </launch>

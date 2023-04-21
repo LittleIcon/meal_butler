@@ -31,15 +31,16 @@ class Task_Demo_Class:
         # Setup "start_pose_estimate" message
         self.msg_start_pose_estimate = PoseWithCovarianceStamped()
         self.msg_start_pose_estimate.header.seq  = 0
-        self.msg_start_pose_estimate.header.stamp  = "now"
+        self.msg_start_pose_estimate.header.stamp  = rospy.Time.now()
         self.msg_start_pose_estimate.header.frame_id  = "map"
-        self.msg_start_pose_estimate.pose.pose.position.x  = 0
-        self.msg_start_pose_estimate.pose.pose.position.y  = 0
-        self.msg_start_pose_estimate.pose.pose.position.z  = 0
-        self.msg_start_pose_estimate.pose.pose.orientation.x  = 0
-        self.msg_start_pose_estimate.pose.pose.orientation.y  = 0
-        self.msg_start_pose_estimate.pose.pose.orientation.z  = 0
-        self.msg_start_pose_estimate.pose.pose.orientation.w  = 0
+        self.msg_start_pose_estimate.pose.pose.position.x  = 0.858
+        self.msg_start_pose_estimate.pose.pose.position.y  = 1.959
+        self.msg_start_pose_estimate.pose.pose.position.z  = 0.0
+        self.msg_start_pose_estimate.pose.pose.orientation.x  = 0.0
+        self.msg_start_pose_estimate.pose.pose.orientation.y  = 0.0
+        self.msg_start_pose_estimate.pose.pose.orientation.z  = -0.341
+        self.msg_start_pose_estimate.pose.pose.orientation.w  = 0.939
+        self.msg_start_pose_estimate.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787]
 
         # Setup "pick_up_pose" message
         self.msg_pick_up_pose = PoseStamped()
@@ -66,7 +67,7 @@ class Task_Demo_Class:
         self.msg_drop_off_pose.pose.orientation.y  = 0
         self.msg_drop_off_pose.pose.orientation.z  = 0
         self.msg_drop_off_pose.pose.orientation.w  = 0
-
+        
         # Setup Service Triggers (or something like that)
         self.switch_to_navigation_mode = rospy.ServiceProxy("/switch_to_navigation_mode", Trigger)
         self.switch_to_position_mode = rospy.ServiceProxy("/switch_to_position_mode", Trigger)
@@ -87,6 +88,7 @@ class Task_Demo_Class:
             
             # TODO: 
             text = input()
+            #text = [0]
             if len(text) == 0:
                 # Check if in navigation mode. If switch to navigation mode
                 self.switch_to_navigation_mode()
@@ -128,14 +130,9 @@ class Task_Demo_Class:
 
 def main():
     node = Task_Demo_Class()
-
-    condition_parameter = "condition"
-    value = "True"
-    if rospy.has_param(condition_parameter):
-            value = rospy.get_param(condition_parameter)
-
-    if value == "True":
-        node.main()
+    rospy.loginfo("hello_world")
+    rospy.logwarn("hello_world")
+    node.main()
 
 if __name__ == '__main__':
     rospy.init_node('task_demo')
