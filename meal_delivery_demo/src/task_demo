@@ -9,6 +9,9 @@ from stretch_moveit_shim.msg import Joint
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_srvs.srv import Trigger
+from actionlib_msgs.msg import GoalStatusArray
+from std_msgs.msg import String
+
 
 # TODO: It would be nice to disable input once a part starts and to re-enable input once the part finish.
 
@@ -23,6 +26,9 @@ rospy.wait_for_service('/stretch_interface/set_joints')
 
 class Task_Demo_Class:
     def __init__(self):
+        self.isMoving = False
+        self.pub_movebase_status = rospy.Publisher('/move_base_status_string', String, queue_size=10)
+        rospy.Subscriber("/move_base/status", GoalStatusArray, self.callback)
         # Setup publishers
         # TODO: Finish writing "2d_nav_estimate" publisher
         self.pub_2d_nav_estimate = rospy.Publisher("/initialpose", PoseWithCovarianceStamped, queue_size = 10)
@@ -45,94 +51,110 @@ class Task_Demo_Class:
         # Setup "pick_up_pose" message
         self.msg_pick_up_pose = PoseStamped()
         self.msg_pick_up_pose.header.seq  = 0
-        self.msg_pick_up_pose.header.stamp  = "now"
+        self.msg_pick_up_pose.header.stamp  = rospy.Time.now()
         self.msg_pick_up_pose.header.frame_id  = "map"
-        self.msg_pick_up_pose.pose.position.x  = 0
-        self.msg_pick_up_pose.pose.position.y  = 0
-        self.msg_pick_up_pose.pose.position.z  = 0
-        self.msg_pick_up_pose.pose.orientation.x  = 0
-        self.msg_pick_up_pose.pose.orientation.y  = 0
-        self.msg_pick_up_pose.pose.orientation.z  = 0
-        self.msg_pick_up_pose.pose.orientation.w  = 0
+        self.msg_pick_up_pose.pose.position.x  = 3.59
+        self.msg_pick_up_pose.pose.position.y  = 0.52
+        self.msg_pick_up_pose.pose.position.z  = 0.0
+        self.msg_pick_up_pose.pose.orientation.x  = 0.0
+        self.msg_pick_up_pose.pose.orientation.y  = 0.0
+        self.msg_pick_up_pose.pose.orientation.z  = 0.94
+        self.msg_pick_up_pose.pose.orientation.w  = 0.31
 
         # Setup "drop_off_pose" message
         self.msg_drop_off_pose = PoseStamped()
         self.msg_drop_off_pose.header.seq  = 0
-        self.msg_drop_off_pose.header.stamp  = "now"
+        self.msg_drop_off_pose.header.stamp  = rospy.Time.now()
         self.msg_drop_off_pose.header.frame_id  = "map"
-        self.msg_drop_off_pose.pose.position.x  = 0
-        self.msg_drop_off_pose.pose.position.y  = 0
-        self.msg_drop_off_pose.pose.position.z  = 0
-        self.msg_drop_off_pose.pose.orientation.x  = 0
-        self.msg_drop_off_pose.pose.orientation.y  = 0
-        self.msg_drop_off_pose.pose.orientation.z  = 0
-        self.msg_drop_off_pose.pose.orientation.w  = 0
+        self.msg_drop_off_pose.pose.position.x  = 4.0
+        self.msg_drop_off_pose.pose.position.y  = -0.07
+        self.msg_drop_off_pose.pose.position.z  = 0.0
+        self.msg_drop_off_pose.pose.orientation.x  = 0.0
+        self.msg_drop_off_pose.pose.orientation.y  = 0.0
+        self.msg_drop_off_pose.pose.orientation.z  = 0.48
+        self.msg_drop_off_pose.pose.orientation.w  = 0.87
         
         # Setup Service Triggers (or something like that)
         self.switch_to_navigation_mode = rospy.ServiceProxy("/switch_to_navigation_mode", Trigger)
         self.switch_to_position_mode = rospy.ServiceProxy("/switch_to_position_mode", Trigger)
+            
 
-    def main(self):
+    def callback(self, msg: GoalStatusArray):
+        if len(msg.status_list) and msg.status_list[-1].status == 1:
+            self.isMoving = True
+        else:
+            self.isMoving = False
+    
+    def run(self):
         while(True):
             # Run initialization code
             print("\n")
             print("Part 0: Initialization")
-            self.pub_2d_nav_estimate.publish(self.msg_start_pose_estimate)
+            #self.pub_2d_nav_estimate.publish(self.msg_start_pose_estimate)
             print("Part 0 Completed.")
 
 
             # Go to Pick Up Location
             print("\n")
             print("Part 1: Drive to Pick-Up Position")
-            print("Press Enter:")
+            print("Press Enter to start:")
             
             # TODO: 
             text = input()
             #text = [0]
-            if len(text) == 0:
-                # Check if in navigation mode. If switch to navigation mode
-                self.switch_to_navigation_mode()
+            # Check if in navigation mode. If switch to navigation mode
+            self.switch_to_navigation_mode()
 
-                # TODO: Publish 2D Nav Goal for Pick Up Position
-                # TODO: Check if 2D Nav Goal was reached
-                    # There should be something like a topic that can be subscribed to that announces when a 2D Nav Goal was reached
-                    # There should be something like a topic that can be subscribed to that announces the current distance from the 2D Nav Goal.
-                        # Once the error is small enough a cancel message could be sent.
-                    # After a decided amount of time has passed a cancel message could be sent if the 2D Nav Goal is not reached.
-                    # TODO: rostopic pub --once /move_base/cancel actionlib_msgs/GoalID -- {}
-                self.pub_2d_nav_goal.publish(self.msg_pick_up_pose)
+            # TODO: Publish 2D Nav Goal for Pick Up Position
+            # TODO: Check if 2D Nav Goal was reached
+                # There should be something like a topic that can be subscribed to that announces when a 2D Nav Goal was reached
+                # There should be something like a topic that can be subscribed to that announces the current distance from the 2D Nav Goal.
+                    # Once the error is small enough a cancel message could be sent.
+                # After a decided amount of time has passed a cancel message could be sent if the 2D Nav Goal is not reached.
+                # TODO: rostopic pub --once /move_base/cancel actionlib_msgs/GoalID -- {}
+            self.pub_2d_nav_goal.publish(self.msg_pick_up_pose)
+            print("Hello Stretch is moving to Pick-Up Position")
+            # Wait for goal to be finished
+            while (self.isMoving is True):
+                rospy.sleep(0.5)
+            print("Hello Stretch has arrived at Pick-Up Position")
 
             print("Part 2: Pick-Up Plate")
-            print("Press Enter:")
+            print("Press Enter to continue:")
             text = input()
-            if len(text) == 0:
-                self.switch_to_position_mode()
-                print("Use the Keyboard Control to control the robot.")
+            self.switch_to_position_mode()
+            print("Use the Keyboard Control to control the robot.")
             
             # Drive to place position
             print("\n")
             print("Part 3: Drive to Place Position")
-            print("Press Enter:")
+            print("Press Enter to continue:")
             text = input()
-            if len(text) == 0:
-                self.switch_to_navigation_mode()
-                self.pub_2d_nav_goal.publish(self.msg_drop_off_pose)
-                print("Hello Stretch has arrived at Place Position")
+            self.switch_to_navigation_mode()
+            self.pub_2d_nav_goal.publish(self.msg_drop_off_pose)
+            print("Hello Stretch is moving to Place Position")
+            ## Wait for goal to be finished
+            while (self.isMoving is True):
+                rospy.sleep(0.5)
+            print("Hello Stretch has arrived at Place Position")
 
             # Place Plate
             print("\n")
             print("Part 4: Place Plate")
-            print("Press Enter:")
+            print("Press Enter to continue:")
             text = input()
             if len(text) == 0:
                 self.switch_to_position_mode()
                 print("Use the Keyboard Control to control the robot.")
 
 def main():
+    #TODO: Look at the below
+    #rospy.init_node('listener', anonymous=True)
+    #rospy.Subscriber("/move_base/status", GoalStatusArray, callback)
     node = Task_Demo_Class()
     rospy.loginfo("hello_world")
     rospy.logwarn("hello_world")
-    node.main()
+    node.run()
 
 if __name__ == '__main__':
     rospy.init_node('task_demo')
